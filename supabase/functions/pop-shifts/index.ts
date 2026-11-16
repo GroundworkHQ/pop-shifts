@@ -10,6 +10,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const HOUSEHOLD = "pop";
 const ALLOWED_ORIGINS = new Set([
   "https://pop.miguelloza.com",
+  "http://pop.miguelloza.com",
   "http://localhost:8787",
 ]);
 
