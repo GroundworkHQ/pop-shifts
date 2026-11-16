@@ -98,6 +98,10 @@
     return { merged, gaps, covered: merged.reduce((t, [a, b]) => t + (b - a), 0) };
   }
 
+  // A slot has "passed" once its end time is behind us (viewer's local clock).
+  function nowInfo() { const n = new Date(); return { today: iso(n), min: n.getHours() * 60 + n.getMinutes() }; }
+  function isPassed(key, endMin, now) { return key < now.today || (key === now.today && endMin <= now.min); }
+
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
   const weekHooks = [];
@@ -114,7 +118,7 @@
 
   function renderMonth() {
     const { first, last, days } = monthGrid(), todayIso = iso(new Date()), m = first.getMonth();
-    const monthIsPast = iso(last) < todayIso;
+    const monthIsPast = iso(last) < todayIso, nowM = nowInfo();
     $("weekLabel").textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
     const root = $("month"); root.replaceChildren();
     const grid = el("div", "mgrid");
@@ -122,7 +126,8 @@
     let covered = 0, inMonthDays = 0, open = 0;
     days.forEach((d) => {
       const key = iso(d), inMonth = d.getMonth() === m, past = key < todayIso;
-      const { gaps, covered: c } = coverage(shifts.filter((x) => x.date === key));
+      const { gaps: allGaps, covered: c } = coverage(shifts.filter((x) => x.date === key));
+      const gaps = monthIsPast ? allGaps : allGaps.filter((g) => !isPassed(key, g[1], nowM));
       const cell = el("button", "mcell"); cell.type = "button";
       if (!inMonth) cell.classList.add("out");
       if (past) cell.classList.add("past");
@@ -167,32 +172,39 @@
     const range = `${dates[0].toLocaleDateString(undefined, opts)} – ${dates[6].toLocaleDateString(undefined, opts)}`;
     $("weekLabel").textContent = weekOffset === 0 ? `This Week · ${range}` : range;
     const root = $("days"); root.replaceChildren();
+    const now = nowInfo();
     let totalCovered = 0, openSlots = 0;
     dates.forEach((d, i) => {
-      const key = iso(d);
+      const key = iso(d), pastDay = key < now.today;
       const list = shifts.filter((s) => s.date === key).sort((a, b) => toMin(a.start) - toMin(b.start));
       const { merged, gaps, covered } = coverage(list);
-      totalCovered += covered; openSlots += gaps.length;
-      const card = el("section", "day" + (key === todayIso ? " today" : "")); card.id = `day-${key}`;
+      const open = gaps.filter((g) => !isPassed(key, g[1], now)).length;
+      totalCovered += covered; openSlots += open;
+      const card = el("section", "day" + (key === todayIso ? " today" : "") + (pastDay ? " past" : "")); card.id = `day-${key}`;
       const head = el("div", "dayhead");
       const h = el("h3", null, DAYS[i]); h.append(el("span", "date", d.toLocaleDateString(undefined, opts)));
-      head.append(h, el("span", gaps.length >= 2 ? "pill two" : gaps.length === 1 ? "pill one" : "pill ok", gaps.length ? `${gaps.length} Open` : "Covered"));
+      head.append(h, pastDay ? el("span", "pill", "Past")
+        : el("span", open >= 2 ? "pill two" : open === 1 ? "pill one" : "pill ok", open ? `${open} Open` : "Covered"));
       const strip = el("div", "strip"); strip.setAttribute("aria-hidden", "true");
       merged.forEach(([a, b]) => { const s = el("div", "seg"); s.style.left = ((a - DAY_START) / SPAN * 100) + "%"; s.style.width = ((b - a) / SPAN * 100) + "%"; strip.append(s); });
+      // Shade time that's already behind us.
+      const goneUntil = pastDay ? DAY_END : key === now.today ? Math.min(DAY_END, Math.max(DAY_START, now.min)) : DAY_START;
+      if (goneUntil > DAY_START) { const g = el("div", "gone"); g.style.width = ((goneUntil - DAY_START) / SPAN * 100) + "%"; strip.append(g); }
       const ticks = el("div", "ticks"); ["9a", "12p", "3p", "6p", "9p"].forEach((t) => ticks.append(el("span", null, t)));
       const lst = el("div", "list");
       const rows = [...list.map((s) => ({ k: "s", at: toMin(s.start), s })), ...gaps.map((g) => ({ k: "g", at: g[0], g }))]
         .sort((a, b) => a.at - b.at || (a.k === "g" ? 1 : -1));
       rows.forEach((r) => {
         if (r.k === "s") {
-          const b = el("button", "shift"); b.type = "button";
+          const b = el("button", "shift" + (isPassed(key, toMin(r.s.end), now) ? " passed" : "")); b.type = "button";
           b.append(el("span", "t", `${fmt(toMin(r.s.start))} – ${fmt(toMin(r.s.end))}`), el("span", "n", r.s.name));
           if (r.s.note) b.append(el("span", "note", r.s.note));
           b.setAttribute("aria-label", `Edit ${r.s.name}'s shift`);
           b.onclick = () => withCode(() => openForm(r.s));
           lst.append(b);
         } else {
-          const g = el("div", "gaprow"); g.append(el("span", null, `${fmt(r.g[0])} – ${fmt(r.g[1])}`), el("span", null, "Open"));
+          const gone = isPassed(key, r.g[1], now);
+          const g = el("div", "gaprow" + (gone ? " passed" : "")); g.append(el("span", null, `${fmt(r.g[0])} – ${fmt(r.g[1])}`), el("span", null, gone ? "Passed" : "Open"));
           lst.append(g);
         }
       });
@@ -202,8 +214,11 @@
       root.append(card);
     });
     $("hours").textContent = `${Math.round(totalCovered / 6) / 10} / 84 Hrs Covered`;
-    const gp = $("gapPill"); gp.className = openSlots ? "pill warn" : "pill ok";
-    gp.textContent = openSlots ? `${openSlots} Open ${openSlots === 1 ? "Slot" : "Slots"} This Week` : "Fully Covered";
+    const gp = $("gapPill");
+    if (iso(dates[6]) < now.today) { gp.className = "pill"; gp.textContent = "Past Week"; return; }
+    gp.className = openSlots ? "pill warn" : "pill ok";
+    const scope = weekOffset === 0 ? "Left This Week" : "This Week";
+    gp.textContent = openSlots ? `${openSlots} Open ${openSlots === 1 ? "Slot" : "Slots"} ${scope}` : "Fully Covered";
   }
 
   async function load() {

@@ -135,3 +135,8 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--
 .mcell.open-2{background:var(--red-soft);border-color:var(--red);border-style:dashed}
 .mcell.open-2 .mstat{color:var(--red)}
 .gate .hint-text{margin:0;color:var(--muted);font-size:14px}
+/* Time that has already passed */
+.day.past{opacity:.6}
+.shift.passed{opacity:.55}
+.gaprow.passed{border-color:var(--line);color:var(--muted);font-weight:500}
+.strip .gone{position:absolute;top:0;bottom:0;left:0;background:var(--bg);opacity:.7}

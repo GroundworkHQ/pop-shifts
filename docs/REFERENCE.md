@@ -10,6 +10,7 @@ Family sign-up for day coverage watching Pop (9 AM to 9 PM). Memo has overnight.
 
 ## Views
 - Week / Month toggle, remembered per phone (localStorage `pop-view`). Month is an overview grid: past days neutral, totals count today onward. Tapping a day opens its week and scrolls to it. Caregiver Hours only shows in Week view.
+- Passed time (slot end <= viewer's local now) shows gray "Passed", is shaded on the bar, and is excluded from open counts. Past days/weeks are dimmed with a "Past" badge. Shifts stay tappable for corrections.
 - `load()` uses a sequence counter so the newest request wins (fast arrow taps can't show stale weeks).
 
 ## Caregiver Hours (Martha)
