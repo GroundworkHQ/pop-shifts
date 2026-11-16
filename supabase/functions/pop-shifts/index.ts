@@ -137,6 +137,84 @@ Deno.serve(async (req) => {
       return json({ ok: true }, 200, origin);
     }
 
+    // ---- Paid helper hours (all behind the family code) ----
+    if (body.action === "hours_list") {
+      const from = String(body.from ?? ""), to = String(body.to ?? "");
+      if (!DATE_RE.test(from) || !DATE_RE.test(to)) return json({ error: "Bad range" }, 400, origin);
+      const [helpers, hours] = await Promise.all([
+        db.from("pop_helpers").select("id, name, hourly_rate").eq("household_id", HOUSEHOLD).order("name"),
+        db.from("pop_hours").select("id, helper_id, work_date, start_time, end_time, minutes, note, paid")
+          .eq("household_id", HOUSEHOLD).gte("work_date", from).lte("work_date", to)
+          .order("work_date").order("start_time").limit(1000),
+      ]);
+      if (helpers.error) throw helpers.error;
+      if (hours.error) throw hours.error;
+      return json({
+        helpers: (helpers.data ?? []).map((h) => ({ id: h.id, name: h.name, rate: Number(h.hourly_rate) })),
+        hours: (hours.data ?? []).map((r) => ({
+          id: r.id, helperId: r.helper_id, date: r.work_date,
+          start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5),
+          minutes: r.minutes, note: r.note ?? "", paid: r.paid,
+        })),
+      }, 200, origin);
+    }
+
+    if (body.action === "hours_save") {
+      const e = body.entry ?? {};
+      const helperId = String(e.helperId ?? ""), date = String(e.date ?? "");
+      const start = String(e.start ?? ""), end = String(e.end ?? "");
+      const note = String(e.note ?? "").trim().slice(0, 200);
+      if (!UUID_RE.test(helperId)) return json({ error: "Bad helper" }, 400, origin);
+      if (!DATE_RE.test(date) || !TIME_RE.test(start) || !TIME_RE.test(end)) return json({ error: "Bad date or time" }, 400, origin);
+      if (start === end) return json({ error: "Start and end can't be the same" }, 400, origin);
+      // End earlier than start = overnight, ends the next morning.
+      const minutes = ((toMin(end) - toMin(start)) + 1440) % 1440;
+      const row = {
+        household_id: HOUSEHOLD, helper_id: helperId, work_date: date,
+        start_time: start, end_time: end, minutes, note, updated_at: new Date().toISOString(),
+      };
+      if (e.id) {
+        if (!UUID_RE.test(String(e.id))) return json({ error: "Bad id" }, 400, origin);
+        const { data, error } = await db.from("pop_hours").update(row)
+          .eq("id", e.id).eq("household_id", HOUSEHOLD).select("id").maybeSingle();
+        if (error) throw error;
+        if (!data) return json({ error: "Entry not found" }, 404, origin);
+        return json({ ok: true }, 200, origin);
+      }
+      const { error } = await db.from("pop_hours").insert(row);
+      if (error) throw error;
+      return json({ ok: true }, 200, origin);
+    }
+
+    if (body.action === "hours_delete") {
+      if (!UUID_RE.test(String(body.id ?? ""))) return json({ error: "Bad id" }, 400, origin);
+      const { error } = await db.from("pop_hours").delete().eq("id", body.id).eq("household_id", HOUSEHOLD);
+      if (error) throw error;
+      return json({ ok: true }, 200, origin);
+    }
+
+    if (body.action === "hours_mark_paid") {
+      const helperId = String(body.helperId ?? ""), from = String(body.from ?? ""), to = String(body.to ?? "");
+      if (!UUID_RE.test(helperId) || !DATE_RE.test(from) || !DATE_RE.test(to)) return json({ error: "Bad request" }, 400, origin);
+      const paid = body.paid === true;
+      const { error } = await db.from("pop_hours")
+        .update({ paid, paid_at: paid ? new Date().toISOString() : null })
+        .eq("household_id", HOUSEHOLD).eq("helper_id", helperId).gte("work_date", from).lte("work_date", to);
+      if (error) throw error;
+      return json({ ok: true }, 200, origin);
+    }
+
+    if (body.action === "helper_rate") {
+      const helperId = String(body.helperId ?? "");
+      const rate = Math.round(Number(body.rate) * 100) / 100;
+      if (!UUID_RE.test(helperId) || !Number.isFinite(rate) || rate < 0 || rate > 1000) return json({ error: "Bad rate" }, 400, origin);
+      const { data, error } = await db.from("pop_helpers").update({ hourly_rate: rate })
+        .eq("id", helperId).eq("household_id", HOUSEHOLD).select("id").maybeSingle();
+      if (error) throw error;
+      if (!data) return json({ error: "Helper not found" }, 404, origin);
+      return json({ ok: true }, 200, origin);
+    }
+
     return json({ error: "Unknown action" }, 400, origin);
   } catch (e) {
     console.error(e);

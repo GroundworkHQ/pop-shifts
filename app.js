@@ -31,6 +31,7 @@
     async post(body, code) {
       if (MOCK) {
         if (code !== "pop") return { status: 401, data: { error: "wrong_code" } };
+        if (window.PopMockHours && /^(hours_|helper_)/.test(body.action)) return window.PopMockHours(body);
         if (body.action === "save") {
           const s = { ...body.shift, id: body.shift.id || crypto.randomUUID() };
           const i = mockRows.findIndex((x) => x.id === s.id);
@@ -72,7 +73,9 @@
 
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
-  function render() {
+  const weekHooks = [];
+  function render() { renderBoard(); weekHooks.forEach((f) => f()); }
+  function renderBoard() {
     const dates = weekDates(), todayIso = iso(new Date());
     const opts = { month: "short", day: "numeric" };
     const range = `${dates[0].toLocaleDateString(undefined, opts)} – ${dates[6].toLocaleDateString(undefined, opts)}`;
@@ -202,6 +205,14 @@
   // Keep it fresh when people come back to the tab.
   document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
   setInterval(() => { if (!document.hidden && $("scrim").hidden) load(); }, 60000);
+
+  // Shared with hours.js
+  window.PopBoard = {
+    MOCK, api, store, el, fmt, toMin, iso, pad,
+    weekDates: () => weekDates(),
+    onRender: (f) => weekHooks.push(f),
+    rerender: () => render(),
+  };
 
   render();
   load();

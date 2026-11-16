@@ -36,6 +36,20 @@
 
   <div id="status" class="status">Loading the schedule&hellip;</div>
   <div class="days" id="days"></div>
+
+  <section class="paid" id="paid" aria-labelledby="paidTitle">
+    <h2 id="paidTitle" class="section-title">Paid Help</h2>
+    <form id="unlock" class="locked" novalidate>
+      <p>Enter the family code to see paid hours.</p>
+      <div class="unlock-row">
+        <label for="uCode" class="sr">Family code</label>
+        <input id="uCode" type="password" autocomplete="current-password" placeholder="Family code">
+        <button type="submit" class="primary">Unlock</button>
+      </div>
+      <p class="err" id="uErr" hidden></p>
+    </form>
+    <div id="helpers" class="helpers" hidden></div>
+  </section>
   <p class="foot"><button type="button" id="forget" class="linkish" hidden>Sign out of editing on this phone</button></p>
 </div>
 
@@ -74,6 +88,31 @@
   </form>
 </div>
 
+<div class="scrim" id="hScrim" hidden>
+  <form class="sheet" id="hForm" novalidate>
+    <h3 id="hTitle">Log hours</h3>
+    <label for="hDate">Day worked
+      <input id="hDate" type="date" required>
+    </label>
+    <div class="row">
+      <label for="hStart">Start<input id="hStart" type="time" step="900" required></label>
+      <label for="hEnd">End<input id="hEnd" type="time" step="900" required></label>
+    </div>
+    <p class="hint" id="hCalc">0 hrs</p>
+    <label for="hNote">Note (optional)
+      <input id="hNote" autocomplete="off" maxlength="200" placeholder="e.g. took Pop to his appointment">
+    </label>
+    <p class="err" id="hErr" hidden></p>
+    <div class="actions">
+      <button type="button" class="danger" id="hDel" hidden>Remove entry</button>
+      <span class="spacer"></span>
+      <button type="button" id="hCancel">Cancel</button>
+      <button type="submit" class="primary" id="hSave">Save hours</button>
+    </div>
+  </form>
+</div>
+
 <script src="app.js"></script>
+<script src="hours.js"></script>
 </body>
 </html>
