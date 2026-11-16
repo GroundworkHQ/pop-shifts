@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2f6f5e">
+<title>Pop's Shift Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Pop's Shift Board</h1>
+    <p class="sub">Day coverage runs 9:00 AM to 9:00 PM. Memo has overnight.</p>
+  </header>
+
+  <div class="weekbar">
+    <button class="icon" id="prev" aria-label="Previous week">&#8249;</button>
+    <h2 id="weekLabel">This week</h2>
+    <button class="icon" id="next" aria-label="Next week">&#8250;</button>
+  </div>
+
+  <div class="summary" id="summary">
+    <span class="big" id="hours">0 / 84 hrs</span>
+    <span class="pill warn" id="gapPill">Loading</span>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--accent)"></i>Covered</span>
+    <span><i style="background:var(--gap-soft);outline:1px dashed var(--gap)"></i>Open, needs someone</span>
+    <span><i style="background:var(--night-soft)"></i>Overnight (Memo)</span>
+  </div>
+
+  <div id="status" class="status">Loading the schedule&hellip;</div>
+  <div class="days" id="days"></div>
+  <p class="foot"><button type="button" id="forget" class="linkish" hidden>Sign out of editing on this phone</button></p>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <form class="sheet" id="form" novalidate>
+    <h3 id="formTitle">Add a shift</h3>
+    <label for="fCode" id="codeWrap" hidden>Family code
+      <input id="fCode" type="password" autocomplete="current-password" placeholder="Ask Miguel for the code">
+    </label>
+    <label for="fName">Who's watching Pop
+      <input id="fName" autocomplete="off" placeholder="Name" required>
+    </label>
+    <div class="chips" id="nameChips"></div>
+    <label for="fDate">Day
+      <input id="fDate" type="date" required>
+    </label>
+    <div class="presets">
+      <button type="button" data-p="09:00-15:00">9 &ndash; 3</button>
+      <button type="button" data-p="15:00-21:00">3 &ndash; 9</button>
+      <button type="button" data-p="18:30-21:00">6:30 &ndash; 9</button>
+      <button type="button" data-p="09:00-21:00">All day</button>
+    </div>
+    <div class="row">
+      <label for="fStart">Start<input id="fStart" type="time" min="09:00" max="21:00" step="900" required></label>
+      <label for="fEnd">End<input id="fEnd" type="time" min="09:00" max="21:00" step="900" required></label>
+    </div>
+    <label for="fNote">Note (optional)
+      <input id="fNote" autocomplete="off" maxlength="200" placeholder="e.g. bringing lunch, doctor appt at 1">
+    </label>
+    <p class="err" id="fErr" hidden></p>
+    <div class="actions">
+      <button type="button" class="danger" id="del" hidden>Remove shift</button>
+      <span class="spacer"></span>
+      <button type="button" id="cancel">Cancel</button>
+      <button type="submit" class="primary" id="save">Save shift</button>
+    </div>
+  </form>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
