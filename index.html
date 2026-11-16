@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="styles.css?v=13">
+<link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
 <div class="wrap">
@@ -94,6 +94,21 @@
   </form>
 </div>
 
+<div class="scrim" id="gScrim" hidden>
+  <form class="sheet gate" id="gForm" novalidate>
+    <h3>Enter the Family Code</h3>
+    <p class="hint-text">You need the family code to add or change shifts. Ask Miguel if you don't have it.</p>
+    <label for="gCode" class="sr">Family Code</label>
+    <input id="gCode" type="password" autocomplete="current-password" placeholder="Family Code">
+    <p class="err" id="gErr" hidden></p>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button type="button" id="gCancel">Cancel</button>
+      <button type="submit" class="primary" id="gGo">Continue</button>
+    </div>
+  </form>
+</div>
+
 <div class="scrim" id="hScrim" hidden>
   <form class="sheet" id="hForm" novalidate>
     <h3 id="hTitle">Log Hours</h3>
@@ -118,7 +133,7 @@
   </form>
 </div>
 
-<script src="app.js?v=13"></script>
-<script src="hours.js?v=13"></script>
+<script src="app.js?v=15"></script>
+<script src="hours.js?v=15"></script>
 </body>
 </html>

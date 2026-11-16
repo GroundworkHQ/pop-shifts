@@ -2,18 +2,18 @@
 :root{
   --bg:#f3f5f2; --surface:#ffffff; --ink:#1d2a26; --muted:#5f6f69; --line:#dbe2de;
   --accent:#2f6f5e; --accent-soft:#e1eee9; --accent-ink:#ffffff;
-  --gap:#c2562a; --gap-soft:#fbe9e0; --night:#3b4a6b; --night-soft:#e6e9f2;
+  --gap:#c2562a; --gap-soft:#fbe9e0; --amber:#a86a12; --amber-soft:#fbf0d9; --red:#c0392b; --red-soft:#fbe3e0; --night:#3b4a6b; --night-soft:#e6e9f2;
   --display:"Outfit",ui-sans-serif,system-ui,sans-serif;
   --body:"Figtree",ui-sans-serif,system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833;
   --accent:#6cc1a6; --accent-soft:#1f3a32; --accent-ink:#0f1c18;
-  --gap:#f08a5d; --gap-soft:#3a2219; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}}
+  --gap:#f08a5d; --gap-soft:#3a2219; --amber:#f2b35b; --amber-soft:#3a2c14; --red:#f2736b; --red-soft:#40201e; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833;
   --accent:#6cc1a6; --accent-soft:#1f3a32; --accent-ink:#0f1c18;
-  --gap:#f08a5d; --gap-soft:#3a2219; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}
+  --gap:#f08a5d; --gap-soft:#3a2219; --amber:#f2b35b; --amber-soft:#3a2c14; --red:#f2736b; --red-soft:#40201e; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
@@ -127,3 +127,11 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--
 .mcell.out{background:transparent;border-color:transparent;opacity:.35}
 .mhint{margin:0;color:var(--muted);font-size:13px;text-align:center}
 @media (max-width:420px){.mcell{min-height:56px;padding:5px}.mstat{font-size:10px}}
+/* Open-slot severity: 1 open = orange, 2 open = red */
+.pill.one{background:var(--amber-soft);color:var(--amber)}
+.pill.two{background:var(--red-soft);color:var(--red)}
+.mcell.open-1{background:var(--amber-soft);border-color:var(--amber);border-style:dashed}
+.mcell.open-1 .mstat{color:var(--amber)}
+.mcell.open-2{background:var(--red-soft);border-color:var(--red);border-style:dashed}
+.mcell.open-2 .mstat{color:var(--red)}
+.gate .hint-text{margin:0;color:var(--muted);font-size:14px}

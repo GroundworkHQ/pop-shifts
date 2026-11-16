@@ -133,7 +133,7 @@
       const counts = inMonth && (!past || monthIsPast);
       if (counts) { covered += c; inMonthDays++; open += gaps.length; }
       if (inMonth && !past) {
-        cell.classList.add(gaps.length ? "has-open" : "is-covered");
+        cell.classList.add(gaps.length >= 2 ? "open-2" : gaps.length === 1 ? "open-1" : "is-covered");
         cell.append(el("span", "mstat", gaps.length ? `${gaps.length} Open` : "Covered"));
       }
       const label = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
@@ -176,7 +176,7 @@
       const card = el("section", "day" + (key === todayIso ? " today" : "")); card.id = `day-${key}`;
       const head = el("div", "dayhead");
       const h = el("h3", null, DAYS[i]); h.append(el("span", "date", d.toLocaleDateString(undefined, opts)));
-      head.append(h, el("span", gaps.length ? "pill warn" : "pill ok", gaps.length ? `${gaps.length} Open` : "Covered"));
+      head.append(h, el("span", gaps.length >= 2 ? "pill two" : gaps.length === 1 ? "pill one" : "pill ok", gaps.length ? `${gaps.length} Open` : "Covered"));
       const strip = el("div", "strip"); strip.setAttribute("aria-hidden", "true");
       merged.forEach(([a, b]) => { const s = el("div", "seg"); s.style.left = ((a - DAY_START) / SPAN * 100) + "%"; s.style.width = ((b - a) / SPAN * 100) + "%"; strip.append(s); });
       const ticks = el("div", "ticks"); ["9a", "12p", "3p", "6p", "9p"].forEach((t) => ticks.append(el("span", null, t)));
@@ -189,7 +189,7 @@
           b.append(el("span", "t", `${fmt(toMin(r.s.start))} – ${fmt(toMin(r.s.end))}`), el("span", "n", r.s.name));
           if (r.s.note) b.append(el("span", "note", r.s.note));
           b.setAttribute("aria-label", `Edit ${r.s.name}'s shift`);
-          b.onclick = () => openForm(r.s);
+          b.onclick = () => withCode(() => openForm(r.s));
           lst.append(b);
         } else {
           const g = el("div", "gaprow"); g.append(el("span", null, `${fmt(r.g[0])} – ${fmt(r.g[1])}`), el("span", null, "Open"));
@@ -197,7 +197,7 @@
         }
       });
       const nt = el("div", "night"); nt.append(el("span", null, "9 PM – 9 AM"), el("span", null, "Memo, Overnight")); lst.append(nt);
-      const add = el("button", "add", "+ Add Shift"); add.type = "button"; add.onclick = () => openForm(null, key);
+      const add = el("button", "add", "+ Add Shift"); add.type = "button"; add.onclick = () => withCode(() => openForm(null, key));
       card.append(head, strip, ticks, lst, add);
       root.append(card);
     });
@@ -222,6 +222,34 @@
     }
     render();
   }
+
+  // ---- code gate: the shift form never opens without a working family code ----
+  let afterCode = null;
+  function withCode(fn) {
+    if (store.get()) return fn();
+    afterCode = fn;
+    $("gCode").value = ""; $("gErr").hidden = true;
+    $("gScrim").hidden = false;
+    setTimeout(() => $("gCode").focus(), 30);
+  }
+  function closeGate() { $("gScrim").hidden = true; afterCode = null; }
+  $("gCancel").onclick = closeGate;
+  $("gScrim").addEventListener("click", (e) => { if (e.target === $("gScrim")) closeGate(); });
+  $("gForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = $("gCode").value.trim(), err = $("gErr");
+    if (!code) { err.textContent = "Enter the family code."; err.hidden = false; return; }
+    $("gGo").disabled = true;
+    try {
+      const res = await api.post({ action: "check" }, code);
+      if (res.status === 401) { err.textContent = "That code didn't work. Check it and try again."; err.hidden = false; return; }
+      if (res.status !== 200) { err.textContent = "Couldn't check the code. Try again."; err.hidden = false; return; }
+      store.set(code);
+      const fn = afterCode; closeGate(); render();
+      if (fn) fn();
+    } catch { err.textContent = "Couldn't check the code. Check your connection."; err.hidden = false; }
+    finally { $("gGo").disabled = false; }
+  });
 
   // ---- form ----
   function knownNames() { return [...new Set(shifts.map((s) => s.name))].sort(); }
@@ -264,7 +292,10 @@
   document.querySelectorAll(".presets button").forEach((b) => (b.onclick = () => { const [a, z] = b.dataset.p.split("-"); $("fStart").value = a; $("fEnd").value = z; }));
   $("cancel").onclick = closeForm;
   $("scrim").addEventListener("click", (e) => { if (e.target === $("scrim")) closeForm(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("scrim").hidden) closeForm(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!$("gScrim").hidden) closeGate(); else if (!$("scrim").hidden) closeForm();
+  });
 
   $("form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -303,7 +334,7 @@
 
   // Keep it fresh when people come back to the tab.
   document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
-  setInterval(() => { if (!document.hidden && $("scrim").hidden) load(); }, 60000);
+  setInterval(() => { if (!document.hidden && $("scrim").hidden && $("gScrim").hidden) load(); }, 60000);
 
   // Shared with hours.js
   window.PopBoard = {
