@@ -8,6 +8,10 @@ Family sign-up for day coverage watching Pop (9 AM to 9 PM). Memo has overnight.
 - Backend: Supabase Edge Function `pop-shifts` on internal-prod (`kdgbivcufoarmvckworj`), `verify_jwt: false`, does its own auth.
 - Table `public.pop_shifts`, scoping column `household_id` (`'pop'`). RLS on, no policies, anon/authenticated revoked. Service role only, via the function.
 
+## Views
+- Week / Month toggle, remembered per phone (localStorage `pop-view`). Month is an overview grid: past days neutral, totals count today onward. Tapping a day opens its week and scrolls to it. Caregiver Hours only shows in Week view.
+- `load()` uses a sequence counter so the newest request wins (fast arrow taps can't show stale weeks).
+
 ## Caregiver Hours (Martha)
 - Tables `pop_helpers` (name, hourly_rate) and `pop_hours` (helper_id, work_date, start/end, minutes, note, paid). Same lockdown as `pop_shifts`. Martha is seeded by the migration.
 - Whole section is behind the family code, including reads (`hours_list` is a POST with the code). Viewers without the code see only an unlock box.

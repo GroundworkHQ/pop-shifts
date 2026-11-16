@@ -6,7 +6,9 @@
   const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const $ = (id) => document.getElementById(id);
 
-  let shifts = [], weekOffset = 0, editing = null, confirmDel = false, loading = false;
+  const VIEW_KEY = "pop-view";
+  let shifts = [], weekOffset = 0, monthOffset = 0, editing = null, confirmDel = false, loadSeq = 0;
+  let view = (() => { try { return localStorage.getItem(VIEW_KEY) === "month" ? "month" : "week"; } catch { return "week"; } })();
 
   const pad = (n) => String(n).padStart(2, "0");
   const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -60,6 +62,27 @@
     return Array.from({ length: 7 }, (_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
   }
 
+  function monthGrid() {
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1, 12);
+    const last = new Date(first.getFullYear(), first.getMonth() + 1, 0, 12);
+    const start = new Date(first); start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+    const end = new Date(last); end.setDate(last.getDate() + (6 - ((last.getDay() + 6) % 7)));
+    const days = [];
+    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+    return { first, last, days };
+  }
+
+  function currentRange() {
+    if (view === "month") { const g = monthGrid(); return [iso(g.days[0]), iso(g.days[g.days.length - 1])]; }
+    const d = weekDates(); return [iso(d[0]), iso(d[6])];
+  }
+
+  function weekOffsetFor(date) {
+    const monday = (x) => { const m = new Date(x); m.setHours(12, 0, 0, 0); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; };
+    return Math.round((monday(date) - monday(new Date())) / (7 * 864e5));
+  }
+
   function coverage(list) {
     const iv = list.map((s) => [Math.max(DAY_START, toMin(s.start)), Math.min(DAY_END, toMin(s.end))])
       .filter(([a, b]) => b > a).sort((x, y) => x[0] - y[0]);
@@ -78,13 +101,71 @@
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
   const weekHooks = [];
-  function render() { renderBoard(); weekHooks.forEach((f) => f()); }
+  function render() {
+    const month = view === "month";
+    $("days").hidden = month; $("month").hidden = !month; $("paid").hidden = month; $("legendNight").hidden = month;
+    $("vWeek").setAttribute("aria-pressed", String(!month)); $("vMonth").setAttribute("aria-pressed", String(month));
+    $("prev").setAttribute("aria-label", month ? "Previous month" : "Previous week");
+    $("next").setAttribute("aria-label", month ? "Next month" : "Next week");
+    $("forget").hidden = !store.get();
+    if (month) renderMonth(); else renderBoard();
+    weekHooks.forEach((f) => f());
+  }
+
+  function renderMonth() {
+    const { first, last, days } = monthGrid(), todayIso = iso(new Date()), m = first.getMonth();
+    const monthIsPast = iso(last) < todayIso;
+    $("weekLabel").textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    const root = $("month"); root.replaceChildren();
+    const grid = el("div", "mgrid");
+    ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((n) => grid.append(el("div", "mhead", n)));
+    let covered = 0, inMonthDays = 0, open = 0;
+    days.forEach((d) => {
+      const key = iso(d), inMonth = d.getMonth() === m, past = key < todayIso;
+      const { gaps, covered: c } = coverage(shifts.filter((x) => x.date === key));
+      const cell = el("button", "mcell"); cell.type = "button";
+      if (!inMonth) cell.classList.add("out");
+      if (past) cell.classList.add("past");
+      if (key === todayIso) cell.classList.add("today");
+      cell.append(el("span", "mnum", String(d.getDate())));
+      // Past days stay neutral (no alarm for days already gone); totals count today onward,
+      // or the whole month when it's already over.
+      const counts = inMonth && (!past || monthIsPast);
+      if (counts) { covered += c; inMonthDays++; open += gaps.length; }
+      if (inMonth && !past) {
+        cell.classList.add(gaps.length ? "has-open" : "is-covered");
+        cell.append(el("span", "mstat", gaps.length ? `${gaps.length} Open` : "Covered"));
+      }
+      const label = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+      cell.setAttribute("aria-label", past ? `${label}. Open this week.` : `${label}: ${gaps.length ? `${gaps.length} open` : "covered"}. Open this week.`);
+      cell.onclick = () => openWeekOf(d);
+      grid.append(cell);
+    });
+    root.append(grid, el("p", "mhint", "Tap a day to see its shifts and sign up."));
+    $("hours").textContent = `${Math.round(covered / 6) / 10} / ${inMonthDays * 12} Hrs Covered${monthOffset === 0 ? " Ahead" : ""}`;
+    const gp = $("gapPill");
+    if (monthIsPast) { gp.className = "pill"; gp.textContent = "Past Month"; return; }
+    gp.className = open ? "pill warn" : "pill ok";
+    const scope = monthOffset === 0 ? "Left This Month" : "This Month";
+    gp.textContent = open ? `${open} Open ${open === 1 ? "Slot" : "Slots"} ${scope}` : "Fully Covered";
+  }
+
+  function setView(v) {
+    view = v; try { localStorage.setItem(VIEW_KEY, v); } catch {}
+    render(); load();
+  }
+
+  function openWeekOf(d) {
+    weekOffset = weekOffsetFor(d);
+    setView("week");
+    const key = iso(d);
+    setTimeout(() => document.getElementById(`day-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  }
   function renderBoard() {
     const dates = weekDates(), todayIso = iso(new Date());
     const opts = { month: "short", day: "numeric" };
     const range = `${dates[0].toLocaleDateString(undefined, opts)} – ${dates[6].toLocaleDateString(undefined, opts)}`;
     $("weekLabel").textContent = weekOffset === 0 ? `This Week · ${range}` : range;
-    $("forget").hidden = !store.get();
     const root = $("days"); root.replaceChildren();
     let totalCovered = 0, openSlots = 0;
     dates.forEach((d, i) => {
@@ -92,7 +173,7 @@
       const list = shifts.filter((s) => s.date === key).sort((a, b) => toMin(a.start) - toMin(b.start));
       const { merged, gaps, covered } = coverage(list);
       totalCovered += covered; openSlots += gaps.length;
-      const card = el("section", "day" + (key === todayIso ? " today" : ""));
+      const card = el("section", "day" + (key === todayIso ? " today" : "")); card.id = `day-${key}`;
       const head = el("div", "dayhead");
       const h = el("h3", null, DAYS[i]); h.append(el("span", "date", d.toLocaleDateString(undefined, opts)));
       head.append(h, el("span", gaps.length ? "pill warn" : "pill ok", gaps.length ? `${gaps.length} Open` : "Covered"));
@@ -126,15 +207,20 @@
   }
 
   async function load() {
-    if (loading) return; loading = true;
-    const dates = weekDates();
+    // Newest request wins, so fast arrow taps never leave another week's shifts on screen.
+    const seq = ++loadSeq;
+    const [from, to] = currentRange();
     try {
-      shifts = await api.list(iso(dates[0]), iso(dates[6]));
+      const rows = await api.list(from, to);
+      if (seq !== loadSeq) return;
+      shifts = rows;
       $("status").hidden = true;
     } catch {
+      if (seq !== loadSeq) return;
       $("status").hidden = false;
       $("status").textContent = "Couldn't load the schedule. Check your connection and reload the page.";
-    } finally { loading = false; render(); }
+    }
+    render();
   }
 
   // ---- form ----
@@ -203,8 +289,17 @@
   };
 
   $("forget").onclick = () => { store.clear(); render(); };
-  $("prev").onclick = () => { weekOffset--; render(); load(); };
-  $("next").onclick = () => { weekOffset++; render(); load(); };
+  const step = (n) => { if (view === "month") monthOffset += n; else weekOffset += n; render(); load(); };
+  $("prev").onclick = () => step(-1);
+  $("next").onclick = () => step(1);
+  $("vWeek").onclick = () => { if (view !== "week") setView("week"); };
+  $("vMonth").onclick = () => {
+    if (view === "month") return;
+    // Open the month that contains the week being viewed.
+    const wk = weekDates()[0], now = new Date();
+    monthOffset = (wk.getFullYear() - now.getFullYear()) * 12 + wk.getMonth() - now.getMonth();
+    setView("month");
+  };
 
   // Keep it fresh when people come back to the tab.
   document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });

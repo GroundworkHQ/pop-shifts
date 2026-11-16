@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
 <div class="wrap">
@@ -17,6 +17,11 @@
     <h1>Who's With Pop</h1>
     <p class="sub">Day coverage runs 9:00 AM to 9:00 PM. Memo has overnight.</p>
   </header>
+
+  <div class="viewtoggle" role="group" aria-label="Calendar view">
+    <button type="button" id="vWeek" aria-pressed="true">Week</button>
+    <button type="button" id="vMonth" aria-pressed="false">Month</button>
+  </div>
 
   <div class="weekbar">
     <button class="icon" id="prev" aria-label="Previous week">&#8249;</button>
@@ -31,11 +36,12 @@
   <div class="legend">
     <span><i style="background:var(--accent)"></i>Covered</span>
     <span><i style="background:var(--gap-soft);outline:1px dashed var(--gap)"></i>Open, Needs Someone</span>
-    <span><i style="background:var(--night-soft)"></i>Overnight (Memo)</span>
+    <span id="legendNight"><i style="background:var(--night-soft)"></i>Overnight (Memo)</span>
   </div>
 
   <div id="status" class="status">Loading the schedule&hellip;</div>
   <div class="days" id="days"></div>
+  <div class="month" id="month" hidden></div>
 
   <section class="paid" id="paid" aria-labelledby="paidTitle">
     <h2 id="paidTitle" class="section-title">Caregiver Hours</h2>
@@ -112,7 +118,7 @@
   </form>
 </div>
 
-<script src="app.js?v=11"></script>
-<script src="hours.js?v=11"></script>
+<script src="app.js?v=13"></script>
+<script src="hours.js?v=13"></script>
 </body>
 </html>
