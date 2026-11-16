@@ -13,6 +13,7 @@ Family sign-up for day coverage watching Pop (9 AM to 9 PM). Memo has overnight.
 - Whole section is behind the family code, including reads (`hours_list` is a POST with the code). Viewers without the code see only an unlock box.
 - End time earlier than start = overnight; `minutes` is computed server-side.
 - "Mark Week Paid" flips `paid` on every entry for that helper in the visible Mon to Sun week. Owed = unpaid minutes x rate.
+- "+ Add Caregiver" adds a caregiver (name, optional rate; names unique per household). "Remove Caregiver" only shows, and the function only allows it, when that caregiver has no hours ever logged.
 - Front end lives in `hours.js`, which uses `window.PopBoard` exported by `app.js`.
 
 ## Access

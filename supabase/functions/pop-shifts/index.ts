@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
       return json({ ok: true }, 200, origin);
     }
 
-    // ---- Paid helper hours (all behind the family code) ----
+    // ---- Caregiver hours (all behind the family code) ----
     if (body.action === "hours_list") {
       const from = String(body.from ?? ""), to = String(body.to ?? "");
       if (!DATE_RE.test(from) || !DATE_RE.test(to)) return json({ error: "Bad range" }, 400, origin);
@@ -149,8 +149,15 @@ Deno.serve(async (req) => {
       ]);
       if (helpers.error) throw helpers.error;
       if (hours.error) throw hours.error;
+      // Whether each caregiver has ANY hours ever (removal is only allowed when they don't).
+      const counts = await Promise.all((helpers.data ?? []).map((h) =>
+        db.from("pop_hours").select("id", { count: "exact", head: true })
+          .eq("household_id", HOUSEHOLD).eq("helper_id", h.id)));
+      for (const c of counts) if (c.error) throw c.error;
       return json({
-        helpers: (helpers.data ?? []).map((h) => ({ id: h.id, name: h.name, rate: Number(h.hourly_rate) })),
+        helpers: (helpers.data ?? []).map((h, i) => ({
+          id: h.id, name: h.name, rate: Number(h.hourly_rate), hasHours: (counts[i].count ?? 0) > 0,
+        })),
         hours: (hours.data ?? []).map((r) => ({
           id: r.id, helperId: r.helper_id, date: r.work_date,
           start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5),
@@ -212,6 +219,32 @@ Deno.serve(async (req) => {
         .eq("id", helperId).eq("household_id", HOUSEHOLD).select("id").maybeSingle();
       if (error) throw error;
       if (!data) return json({ error: "Helper not found" }, 404, origin);
+      return json({ ok: true }, 200, origin);
+    }
+
+    if (body.action === "helper_add") {
+      const name = String(body.name ?? "").trim().replace(/\s+/g, " ").slice(0, 60);
+      const rate = body.rate === undefined || body.rate === null || body.rate === "" ? 0 : Math.round(Number(body.rate) * 100) / 100;
+      if (!name) return json({ error: "Name is required" }, 400, origin);
+      if (!Number.isFinite(rate) || rate < 0 || rate > 1000) return json({ error: "Bad rate" }, 400, origin);
+      const { error } = await db.from("pop_helpers").insert({ household_id: HOUSEHOLD, name, hourly_rate: rate });
+      if (error) {
+        if (error.code === "23505") return json({ error: "duplicate" }, 409, origin);
+        throw error;
+      }
+      return json({ ok: true }, 200, origin);
+    }
+
+    if (body.action === "helper_remove") {
+      const helperId = String(body.helperId ?? "");
+      if (!UUID_RE.test(helperId)) return json({ error: "Bad helper" }, 400, origin);
+      // Only remove caregivers with no hours ever logged, so pay history can't be wiped.
+      const { count, error: cErr } = await db.from("pop_hours").select("id", { count: "exact", head: true })
+        .eq("household_id", HOUSEHOLD).eq("helper_id", helperId);
+      if (cErr) throw cErr;
+      if ((count ?? 0) > 0) return json({ error: "has_hours" }, 409, origin);
+      const { error } = await db.from("pop_helpers").delete().eq("id", helperId).eq("household_id", HOUSEHOLD);
+      if (error) throw error;
       return json({ ok: true }, 200, origin);
     }
 

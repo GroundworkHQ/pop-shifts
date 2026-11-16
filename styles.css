@@ -1,17 +1,17 @@
 /* Layout: one narrow column of day cards, each with a 9a-9p coverage strip; phone first. */
 :root{
-  --bg:#f3f5f2; --surface:#ffffff; --ink:#1d2a26; --muted:#5f6f69; --line:#dbe2de; --rule:#b9c6c0;
+  --bg:#f3f5f2; --surface:#ffffff; --ink:#1d2a26; --muted:#5f6f69; --line:#dbe2de;
   --accent:#2f6f5e; --accent-soft:#e1eee9; --accent-ink:#ffffff;
   --gap:#c2562a; --gap-soft:#fbe9e0; --night:#3b4a6b; --night-soft:#e6e9f2;
   --display:"Outfit",ui-sans-serif,system-ui,sans-serif;
   --body:"Figtree",ui-sans-serif,system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833; --rule:#4a5a53;
+  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833;
   --accent:#6cc1a6; --accent-soft:#1f3a32; --accent-ink:#0f1c18;
   --gap:#f08a5d; --gap-soft:#3a2219; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833; --rule:#4a5a53;
+  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833;
   --accent:#6cc1a6; --accent-soft:#1f3a32; --accent-ink:#0f1c18;
   --gap:#f08a5d; --gap-soft:#3a2219; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}
 *{box-sizing:border-box}
@@ -76,7 +76,7 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--
 .spacer{flex:1}
 .foot{text-align:center;margin:0}
 .linkish{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:13px;padding:4px}
-/* Paid Help */
+/* Caregiver Hours */
 .paid{display:grid;gap:12px;margin-top:12px;padding-top:20px;border-top:1px solid var(--line)}
 .section-title{font-size:22px;font-weight:700}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -102,4 +102,7 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--
 .helper-actions{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .hint{margin:-6px 0 0;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 @media (max-width:420px){.shift{flex-wrap:wrap}.shift .note{margin-left:0;text-align:left;flex-basis:100%}}
-.wrap > header{padding-bottom:18px;margin-bottom:6px;border-bottom:1px solid var(--rule)}
+.wrap > header{padding-bottom:20px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.add-caregiver{justify-self:start}
+.add-form h3{font-size:17px;font-weight:600}
+.remove-helper{justify-self:start;padding:0}

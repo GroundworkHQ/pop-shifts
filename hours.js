@@ -1,4 +1,4 @@
-// Caregiver Hours: hours log + pay owed for paid helpers (Martha). Behind the family code.
+// Caregiver Hours: hours log + pay owed for paid caregivers. Behind the family code.
 (() => {
   const P = window.PopBoard;
   const $ = (id) => document.getElementById(id);
@@ -6,7 +6,7 @@
   const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   let helpers = [], hours = [], loadedKey = "", loading = false;
-  let editing = null, editingHelper = null, confirmDel = false, rateEditFor = null;
+  let editing = null, editingHelper = null, confirmDel = false, rateEditFor = null, adding = false, removeArmed = null, draft = { name: "", rate: "" }, focusAdd = false, rateDraft = "", focusRate = false;
 
   // ---- mock backend for ?mock local preview ----
   if (P.MOCK) {
@@ -17,7 +17,15 @@
     rows.push({ id: crypto.randomUUID(), helperId: mh[0].id, date: iso(w[2]), start: "15:00", end: "21:00", minutes: 360, note: "Took Pop to his appointment", paid: false });
     window.PopMockHours = (b) => {
       const ok = (data = { ok: true }) => ({ status: 200, data });
-      if (b.action === "hours_list") return ok({ helpers: mh, hours: rows.filter((r) => r.date >= b.from && r.date <= b.to) });
+      if (b.action === "hours_list") return ok({ helpers: mh.map((h) => ({ ...h, hasHours: rows.some((r) => r.helperId === h.id) })), hours: rows.filter((r) => r.date >= b.from && r.date <= b.to) });
+      if (b.action === "helper_add") {
+        if (mh.some((h) => h.name.toLowerCase() === String(b.name).trim().toLowerCase())) return { status: 409, data: { error: "duplicate" } };
+        mh.push({ id: crypto.randomUUID(), name: String(b.name).trim(), rate: Number(b.rate) || 0 }); mh.sort((a, z) => a.name.localeCompare(z.name)); return ok();
+      }
+      if (b.action === "helper_remove") {
+        if (rows.some((r) => r.helperId === b.helperId)) return { status: 409, data: { error: "has_hours" } };
+        mh.splice(mh.findIndex((h) => h.id === b.helperId), 1); return ok();
+      }
       if (b.action === "hours_save") {
         const e = b.entry, minutes = ((toMin(e.end) - toMin(e.start)) + 1440) % 1440;
         const r = { ...e, id: e.id || crypto.randomUUID(), minutes, paid: false };
@@ -53,7 +61,7 @@
   async function load(force) {
     if (!P.store.get()) return lock();
     const { from, to } = range(), key = from;
-    if (!force && key === loadedKey) return rateEditFor ? undefined : render();
+    if (!force && key === loadedKey) return rateEditFor || adding ? undefined : render();
     if (loading) return; loading = true;
     try {
       const data = await call({ action: "hours_list", from, to });
@@ -86,7 +94,7 @@
       const stat = (label, value) => { const s = el("div", "stat"); s.append(el("span", "stat-label", label), el("span", "stat-value", value)); return s; };
       const rateStat = stat("Rate", h.rate ? `${money(h.rate)}/hr` : "Not Set");
       const rateBtn = el("button", "linkish", h.rate ? "Change" : "Set Rate"); rateBtn.type = "button";
-      rateBtn.onclick = () => { rateEditFor = h.id; render(); };
+      rateBtn.onclick = () => { rateEditFor = h.id; rateDraft = h.rate ? String(h.rate) : ""; focusRate = true; render(); };
       rateStat.append(rateBtn);
       stats.append(stat("This Week", hrs(total)), rateStat, stat("Owed", money(unpaid / 60 * h.rate)));
 
@@ -95,7 +103,7 @@
       if (rateEditFor === h.id) {
         const f = el("form", "rate-row"); f.noValidate = true;
         const inp = el("input"); inp.type = "number"; inp.min = "0"; inp.step = "0.5"; inp.inputMode = "decimal";
-        inp.id = `rate-${h.id}`; inp.value = h.rate || ""; inp.placeholder = "Hourly rate"; inp.setAttribute("aria-label", `${h.name}'s hourly rate in dollars`);
+        inp.id = `rate-${h.id}`; inp.value = rateDraft; inp.oninput = () => { rateDraft = inp.value; }; inp.placeholder = "Hourly rate"; inp.setAttribute("aria-label", `${h.name}'s hourly rate in dollars`);
         const save = el("button", "primary", "Save Rate"); save.type = "submit";
         const cancel = el("button", null, "Cancel"); cancel.type = "button"; cancel.onclick = () => { rateEditFor = null; render(); };
         const err = el("p", "err"); err.hidden = true;
@@ -110,7 +118,7 @@
           finally { save.disabled = false; }
         };
         card.append(f, err);
-        setTimeout(() => inp.focus(), 30);
+        if (focusRate) { focusRate = false; setTimeout(() => inp.focus(), 30); }
       }
 
       const list = el("div", "list");
@@ -142,8 +150,54 @@
         actions.append(pay);
       }
       card.append(list, actions);
+      if (!h.hasHours) {
+        const rm = el("button", "linkish remove-helper", removeArmed === h.id ? `Tap Again to Remove ${h.name}` : "Remove Caregiver"); rm.type = "button";
+        const rmErr = el("p", "err"); rmErr.hidden = true;
+        rm.onclick = async () => {
+          if (removeArmed !== h.id) { removeArmed = h.id; render(); return; }
+          rm.disabled = true;
+          try { if (await call({ action: "helper_remove", helperId: h.id })) { removeArmed = null; await load(true); } }
+          catch (e) { rmErr.textContent = e.message === "has_hours" ? `${h.name} has logged hours, so they can't be removed.` : "Couldn't remove. Try again."; rmErr.hidden = false; rm.disabled = false; }
+        };
+        card.append(rm, rmErr);
+      }
       root.append(card);
     });
+    root.append(addCaregiverUI());
+  }
+
+  function addCaregiverUI() {
+    if (!adding) {
+      const b = el("button", "add add-caregiver", "+ Add Caregiver"); b.type = "button";
+      b.onclick = () => { adding = true; removeArmed = null; draft = { name: "", rate: "" }; focusAdd = true; render(); };
+      return b;
+    }
+    const f = el("form", "day add-form"); f.noValidate = true;
+    f.append(el("h3", null, "Add a Caregiver"));
+    const nameL = el("label", null, "Name"); nameL.htmlFor = "cgName";
+    const name = el("input"); name.id = "cgName"; name.autocomplete = "off"; name.maxLength = 60; name.placeholder = "e.g. Rosa"; name.value = draft.name; name.oninput = () => { draft.name = name.value; };
+    nameL.append(name);
+    const rateL = el("label", null, "Hourly Rate (Optional)"); rateL.htmlFor = "cgRate";
+    const rate = el("input"); rate.id = "cgRate"; rate.type = "number"; rate.min = "0"; rate.step = "0.5"; rate.inputMode = "decimal"; rate.placeholder = "e.g. 20"; rate.value = draft.rate; rate.oninput = () => { draft.rate = rate.value; };
+    rateL.append(rate);
+    const err = el("p", "err"); err.hidden = true;
+    const actions = el("div", "actions");
+    const cancel = el("button", null, "Cancel"); cancel.type = "button"; cancel.onclick = () => { adding = false; render(); };
+    const save = el("button", "primary", "Add Caregiver"); save.type = "submit";
+    actions.append(el("span", "spacer"), cancel, save);
+    f.append(nameL, rateL, err, actions);
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      const n = name.value.trim(), r = rate.value === "" ? 0 : Number(rate.value);
+      if (!n) { err.textContent = "Add the caregiver's name."; err.hidden = false; return; }
+      if (!Number.isFinite(r) || r < 0) { err.textContent = "Enter a dollar amount, like 20, or leave it blank."; err.hidden = false; return; }
+      save.disabled = true;
+      try { if (await call({ action: "helper_add", name: n, rate: r })) { adding = false; await load(true); } }
+      catch (e2) { err.textContent = e2.message === "duplicate" ? `There's already a caregiver named ${n}.` : "Couldn't add them. Try again."; err.hidden = false; }
+      finally { save.disabled = false; }
+    };
+    if (focusAdd) { focusAdd = false; setTimeout(() => name.focus(), 30); }
+    return f;
   }
 
   // ---- log hours sheet ----
