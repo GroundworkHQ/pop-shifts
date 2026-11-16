@@ -1,4 +1,4 @@
-// Pop's Shift Board API.
+// Who's With Pop API (pop.miguelloza.com).
 // GET  ?from=YYYY-MM-DD&to=YYYY-MM-DD   -> list shifts (public read)
 // POST {action:"check"}                 -> validate the family code
 // POST {action:"save", shift:{...}}     -> create or update (needs x-family-code)

@@ -1,4 +1,4 @@
-# Pop's Shift Board
+# Who's With Pop
 
 Family sign-up for day coverage watching Pop (9 AM to 9 PM). Memo has overnight. Live at `pop.miguelloza.com`.
 
