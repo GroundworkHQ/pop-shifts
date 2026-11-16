@@ -68,6 +68,10 @@
     const gaps = []; let cur = DAY_START;
     for (const [a, b] of merged) { if (a > cur) gaps.push([cur, a]); cur = Math.max(cur, b); }
     if (cur < DAY_END) gaps.push([cur, DAY_END]);
+    // The day is two shifts (9-3 and 3-9): split open time at 3 PM so each shift counts on its own.
+    const SPLIT = 15 * 60;
+    const split = gaps.flatMap(([a, b]) => (a < SPLIT && b > SPLIT ? [[a, SPLIT], [SPLIT, b]] : [[a, b]]));
+    gaps.length = 0; gaps.push(...split);
     return { merged, gaps, covered: merged.reduce((t, [a, b]) => t + (b - a), 0) };
   }
 
