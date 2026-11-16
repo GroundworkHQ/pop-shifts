@@ -102,3 +102,4 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--
 .helper-actions{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .hint{margin:-6px 0 0;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 @media (max-width:420px){.shift{flex-wrap:wrap}.shift .note{margin-left:0;text-align:left;flex-basis:100%}}
+.wrap > header{margin-bottom:16px}
