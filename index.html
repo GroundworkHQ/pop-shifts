@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 <div class="wrap">
@@ -20,7 +20,7 @@
 
   <div class="weekbar">
     <button class="icon" id="prev" aria-label="Previous week">&#8249;</button>
-    <h2 id="weekLabel">This week</h2>
+    <h2 id="weekLabel">This Week</h2>
     <button class="icon" id="next" aria-label="Next week">&#8250;</button>
   </div>
 
@@ -30,7 +30,7 @@
   </div>
   <div class="legend">
     <span><i style="background:var(--accent)"></i>Covered</span>
-    <span><i style="background:var(--gap-soft);outline:1px dashed var(--gap)"></i>Open, needs someone</span>
+    <span><i style="background:var(--gap-soft);outline:1px dashed var(--gap)"></i>Open, Needs Someone</span>
     <span><i style="background:var(--night-soft)"></i>Overnight (Memo)</span>
   </div>
 
@@ -38,28 +38,28 @@
   <div class="days" id="days"></div>
 
   <section class="paid" id="paid" aria-labelledby="paidTitle">
-    <h2 id="paidTitle" class="section-title">Paid Help</h2>
+    <h2 id="paidTitle" class="section-title">Caregiver Hours</h2>
     <form id="unlock" class="locked" novalidate>
       <p>Enter the family code to see paid hours.</p>
       <div class="unlock-row">
-        <label for="uCode" class="sr">Family code</label>
-        <input id="uCode" type="password" autocomplete="current-password" placeholder="Family code">
+        <label for="uCode" class="sr">Family Code</label>
+        <input id="uCode" type="password" autocomplete="current-password" placeholder="Family Code">
         <button type="submit" class="primary">Unlock</button>
       </div>
       <p class="err" id="uErr" hidden></p>
     </form>
     <div id="helpers" class="helpers" hidden></div>
   </section>
-  <p class="foot"><button type="button" id="forget" class="linkish" hidden>Sign out of editing on this phone</button></p>
+  <p class="foot"><button type="button" id="forget" class="linkish" hidden>Sign Out of Editing on This Phone</button></p>
 </div>
 
 <div class="scrim" id="scrim" hidden>
   <form class="sheet" id="form" novalidate>
-    <h3 id="formTitle">Add a shift</h3>
-    <label for="fCode" id="codeWrap" hidden>Family code
+    <h3 id="formTitle">Add a Shift</h3>
+    <label for="fCode" id="codeWrap" hidden>Family Code
       <input id="fCode" type="password" autocomplete="current-password" placeholder="Ask Miguel for the code">
     </label>
-    <label for="fName">Who's watching Pop
+    <label for="fName">Who's Watching Pop
       <input id="fName" autocomplete="off" placeholder="Name" required>
     </label>
     <div class="chips" id="nameChips"></div>
@@ -69,29 +69,29 @@
     <div class="presets">
       <button type="button" data-p="09:00-15:00">9 &ndash; 3</button>
       <button type="button" data-p="15:00-21:00">3 &ndash; 9</button>
-      <button type="button" data-p="09:00-21:00">All day</button>
+      <button type="button" data-p="09:00-21:00">All Day</button>
     </div>
     <div class="row">
       <label for="fStart">Start<input id="fStart" type="time" min="09:00" max="21:00" step="900" required></label>
       <label for="fEnd">End<input id="fEnd" type="time" min="09:00" max="21:00" step="900" required></label>
     </div>
-    <label for="fNote">Note (optional)
+    <label for="fNote">Note (Optional)
       <input id="fNote" autocomplete="off" maxlength="200" placeholder="e.g. bringing lunch, doctor appt at 1">
     </label>
     <p class="err" id="fErr" hidden></p>
     <div class="actions">
-      <button type="button" class="danger" id="del" hidden>Remove shift</button>
+      <button type="button" class="danger" id="del" hidden>Remove Shift</button>
       <span class="spacer"></span>
       <button type="button" id="cancel">Cancel</button>
-      <button type="submit" class="primary" id="save">Save shift</button>
+      <button type="submit" class="primary" id="save">Save Shift</button>
     </div>
   </form>
 </div>
 
 <div class="scrim" id="hScrim" hidden>
   <form class="sheet" id="hForm" novalidate>
-    <h3 id="hTitle">Log hours</h3>
-    <label for="hDate">Day worked
+    <h3 id="hTitle">Log Hours</h3>
+    <label for="hDate">Day Worked
       <input id="hDate" type="date" required>
     </label>
     <div class="row">
@@ -99,20 +99,20 @@
       <label for="hEnd">End<input id="hEnd" type="time" step="900" required></label>
     </div>
     <p class="hint" id="hCalc">0 hrs</p>
-    <label for="hNote">Note (optional)
+    <label for="hNote">Note (Optional)
       <input id="hNote" autocomplete="off" maxlength="200" placeholder="e.g. took Pop to his appointment">
     </label>
     <p class="err" id="hErr" hidden></p>
     <div class="actions">
-      <button type="button" class="danger" id="hDel" hidden>Remove entry</button>
+      <button type="button" class="danger" id="hDel" hidden>Remove Entry</button>
       <span class="spacer"></span>
       <button type="button" id="hCancel">Cancel</button>
-      <button type="submit" class="primary" id="hSave">Save hours</button>
+      <button type="submit" class="primary" id="hSave">Save Hours</button>
     </div>
   </form>
 </div>
 
-<script src="app.js?v=6"></script>
-<script src="hours.js?v=6"></script>
+<script src="app.js?v=9"></script>
+<script src="hours.js?v=9"></script>
 </body>
 </html>

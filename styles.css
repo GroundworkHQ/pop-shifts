@@ -1,17 +1,17 @@
 /* Layout: one narrow column of day cards, each with a 9a-9p coverage strip; phone first. */
 :root{
-  --bg:#f3f5f2; --surface:#ffffff; --ink:#1d2a26; --muted:#5f6f69; --line:#dbe2de;
+  --bg:#f3f5f2; --surface:#ffffff; --ink:#1d2a26; --muted:#5f6f69; --line:#dbe2de; --rule:#b9c6c0;
   --accent:#2f6f5e; --accent-soft:#e1eee9; --accent-ink:#ffffff;
   --gap:#c2562a; --gap-soft:#fbe9e0; --night:#3b4a6b; --night-soft:#e6e9f2;
   --display:"Outfit",ui-sans-serif,system-ui,sans-serif;
   --body:"Figtree",ui-sans-serif,system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833;
+  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833; --rule:#4a5a53;
   --accent:#6cc1a6; --accent-soft:#1f3a32; --accent-ink:#0f1c18;
   --gap:#f08a5d; --gap-soft:#3a2219; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833;
+  --bg:#121816; --surface:#1a2320; --ink:#e6eeea; --muted:#9aaba4; --line:#2c3833; --rule:#4a5a53;
   --accent:#6cc1a6; --accent-soft:#1f3a32; --accent-ink:#0f1c18;
   --gap:#f08a5d; --gap-soft:#3a2219; --night:#a9b6dd; --night-soft:#232a3d; color-scheme:dark}
 *{box-sizing:border-box}
@@ -21,7 +21,7 @@ body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
 .wrap{max-width:640px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
-h1{font-size:clamp(28px,7.5vw,34px);font-weight:700;letter-spacing:-.01em;line-height:1.1}
+h1{font-size:clamp(30px,8.5vw,38px);font-weight:700;letter-spacing:-.01em;line-height:1.1}
 .sub{color:var(--muted);margin:6px 0 0;font-size:15px}
 .weekbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .weekbar h2{font-size:17px;font-weight:600;text-align:center;flex:1}
@@ -102,4 +102,4 @@ input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--
 .helper-actions{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .hint{margin:-6px 0 0;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 @media (max-width:420px){.shift{flex-wrap:wrap}.shift .note{margin-left:0;text-align:left;flex-basis:100%}}
-.wrap > header{margin-bottom:10px}
+.wrap > header{padding-bottom:18px;margin-bottom:6px;border-bottom:1px solid var(--rule)}

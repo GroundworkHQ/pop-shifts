@@ -1,4 +1,4 @@
-// Paid Help: hours log + pay owed for paid helpers (Martha). Behind the family code.
+// Caregiver Hours: hours log + pay owed for paid helpers (Martha). Behind the family code.
 (() => {
   const P = window.PopBoard;
   const $ = (id) => document.getElementById(id);
@@ -80,15 +80,15 @@
       const head = el("div", "dayhead");
       head.append(el("h3", null, `${h.name}'s Hours`),
         el("span", mine.length === 0 ? "pill" : allPaid ? "pill ok" : "pill warn",
-          mine.length === 0 ? "No hours yet" : allPaid ? "Paid" : `${money(unpaid / 60 * h.rate)} owed`));
+          mine.length === 0 ? "No Hours Yet" : allPaid ? "Paid" : `${money(unpaid / 60 * h.rate)} Owed`));
 
       const stats = el("div", "stats");
       const stat = (label, value) => { const s = el("div", "stat"); s.append(el("span", "stat-label", label), el("span", "stat-value", value)); return s; };
-      const rateStat = stat("Rate", h.rate ? `${money(h.rate)}/hr` : "Not set");
-      const rateBtn = el("button", "linkish", h.rate ? "Change" : "Set rate"); rateBtn.type = "button";
+      const rateStat = stat("Rate", h.rate ? `${money(h.rate)}/hr` : "Not Set");
+      const rateBtn = el("button", "linkish", h.rate ? "Change" : "Set Rate"); rateBtn.type = "button";
       rateBtn.onclick = () => { rateEditFor = h.id; render(); };
       rateStat.append(rateBtn);
-      stats.append(stat("This week", hrs(total)), rateStat, stat("Owed", money(unpaid / 60 * h.rate)));
+      stats.append(stat("This Week", hrs(total)), rateStat, stat("Owed", money(unpaid / 60 * h.rate)));
 
       card.append(head, stats);
 
@@ -96,7 +96,7 @@
         const f = el("form", "rate-row"); f.noValidate = true;
         const inp = el("input"); inp.type = "number"; inp.min = "0"; inp.step = "0.5"; inp.inputMode = "decimal";
         inp.id = `rate-${h.id}`; inp.value = h.rate || ""; inp.placeholder = "Hourly rate"; inp.setAttribute("aria-label", `${h.name}'s hourly rate in dollars`);
-        const save = el("button", "primary", "Save rate"); save.type = "submit";
+        const save = el("button", "primary", "Save Rate"); save.type = "submit";
         const cancel = el("button", null, "Cancel"); cancel.type = "button"; cancel.onclick = () => { rateEditFor = null; render(); };
         const err = el("p", "err"); err.hidden = true;
         f.append(el("span", "dollar", "$"), inp, save, cancel);
@@ -114,14 +114,14 @@
       }
 
       const list = el("div", "list");
-      if (!mine.length) list.append(el("p", "empty", `No hours logged this week. ${h.name} can tap "+ Log hours" after each visit.`));
+      if (!mine.length) list.append(el("p", "empty", `No hours logged this week. ${h.name} can tap "+ Log Hours" after each visit.`));
       mine.forEach((r) => {
         const d = new Date(r.date + "T12:00:00");
         const b = el("button", "shift entry" + (r.paid ? " is-paid" : "")); b.type = "button";
         const overnight = toMin(r.end) <= toMin(r.start);
         b.append(
           el("span", "t", `${DOW[(d.getDay() + 6) % 7]} ${d.getMonth() + 1}/${d.getDate()}`),
-          el("span", "n", `${fmt(toMin(r.start))} – ${fmt(toMin(r.end))}${overnight ? " (next day)" : ""}`),
+          el("span", "n", `${fmt(toMin(r.start))} – ${fmt(toMin(r.end))}${overnight ? " (Next Day)" : ""}`),
           el("span", "note", r.note ? `${hrs(r.minutes)} · ${r.note}` : hrs(r.minutes)),
         );
         b.setAttribute("aria-label", `Edit hours on ${r.date}`);
@@ -130,7 +130,7 @@
       });
 
       const actions = el("div", "helper-actions");
-      const add = el("button", "add", "+ Log hours"); add.type = "button"; add.onclick = () => openForm(h, null);
+      const add = el("button", "add", "+ Log Hours"); add.type = "button"; add.onclick = () => openForm(h, null);
       actions.append(add);
       if (mine.length) {
         const pay = el("button", allPaid ? "linkish" : "primary", allPaid ? "Mark Week Unpaid" : "Mark Week Paid"); pay.type = "button";
@@ -156,13 +156,13 @@
 
   function openForm(h, r) {
     editingHelper = h; editing = r; confirmDel = false;
-    $("hTitle").textContent = r ? `Edit ${h.name}'s hours` : `Log ${h.name}'s hours`;
+    $("hTitle").textContent = r ? `Edit ${h.name}'s Hours` : `Log ${h.name}'s Hours`;
     const today = iso(new Date()), { from, to } = range();
     $("hDate").value = r?.date || (today >= from && today <= to ? today : from);
     $("hStart").value = r?.start || "09:00";
     $("hEnd").value = r?.end || "15:00";
     $("hNote").value = r?.note || "";
-    $("hDel").hidden = !r; $("hDel").textContent = "Remove entry";
+    $("hDel").hidden = !r; $("hDel").textContent = "Remove Entry";
     $("hErr").hidden = true;
     updateCalc();
     $("hScrim").hidden = false;
@@ -193,7 +193,7 @@
 
   $("hDel").onclick = async () => {
     if (!editing) return;
-    if (!confirmDel) { confirmDel = true; $("hDel").textContent = "Tap again to remove"; return; }
+    if (!confirmDel) { confirmDel = true; $("hDel").textContent = "Tap Again to Remove"; return; }
     try { if (await call({ action: "hours_delete", id: editing.id })) { closeForm(); await load(true); } }
     catch { showErr("Couldn't remove it. Try again."); }
   };

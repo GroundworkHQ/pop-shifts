@@ -83,7 +83,7 @@
     const dates = weekDates(), todayIso = iso(new Date());
     const opts = { month: "short", day: "numeric" };
     const range = `${dates[0].toLocaleDateString(undefined, opts)} – ${dates[6].toLocaleDateString(undefined, opts)}`;
-    $("weekLabel").textContent = weekOffset === 0 ? `This week · ${range}` : range;
+    $("weekLabel").textContent = weekOffset === 0 ? `This Week · ${range}` : range;
     $("forget").hidden = !store.get();
     const root = $("days"); root.replaceChildren();
     let totalCovered = 0, openSlots = 0;
@@ -95,7 +95,7 @@
       const card = el("section", "day" + (key === todayIso ? " today" : ""));
       const head = el("div", "dayhead");
       const h = el("h3", null, DAYS[i]); h.append(el("span", "date", d.toLocaleDateString(undefined, opts)));
-      head.append(h, el("span", gaps.length ? "pill warn" : "pill ok", gaps.length ? `${gaps.length} open` : "Covered"));
+      head.append(h, el("span", gaps.length ? "pill warn" : "pill ok", gaps.length ? `${gaps.length} Open` : "Covered"));
       const strip = el("div", "strip"); strip.setAttribute("aria-hidden", "true");
       merged.forEach(([a, b]) => { const s = el("div", "seg"); s.style.left = ((a - DAY_START) / SPAN * 100) + "%"; s.style.width = ((b - a) / SPAN * 100) + "%"; strip.append(s); });
       const ticks = el("div", "ticks"); ["9a", "12p", "3p", "6p", "9p"].forEach((t) => ticks.append(el("span", null, t)));
@@ -115,14 +115,14 @@
           lst.append(g);
         }
       });
-      const nt = el("div", "night"); nt.append(el("span", null, "9 PM – 9 AM"), el("span", null, "Memo, overnight")); lst.append(nt);
-      const add = el("button", "add", "+ Add shift"); add.type = "button"; add.onclick = () => openForm(null, key);
+      const nt = el("div", "night"); nt.append(el("span", null, "9 PM – 9 AM"), el("span", null, "Memo, Overnight")); lst.append(nt);
+      const add = el("button", "add", "+ Add Shift"); add.type = "button"; add.onclick = () => openForm(null, key);
       card.append(head, strip, ticks, lst, add);
       root.append(card);
     });
-    $("hours").textContent = `${Math.round(totalCovered / 6) / 10} / 84 hrs covered`;
+    $("hours").textContent = `${Math.round(totalCovered / 6) / 10} / 84 Hrs Covered`;
     const gp = $("gapPill"); gp.className = openSlots ? "pill warn" : "pill ok";
-    gp.textContent = openSlots ? `${openSlots} open ${openSlots === 1 ? "slot" : "slots"} this week` : "Fully covered";
+    gp.textContent = openSlots ? `${openSlots} Open ${openSlots === 1 ? "Slot" : "Slots"} This Week` : "Fully Covered";
   }
 
   async function load() {
@@ -141,7 +141,7 @@
   function knownNames() { return [...new Set(shifts.map((s) => s.name))].sort(); }
   function openForm(s, dateKey) {
     editing = s; confirmDel = false;
-    $("formTitle").textContent = s ? "Edit shift" : "Add a shift";
+    $("formTitle").textContent = s ? "Edit Shift" : "Add a Shift";
     $("codeWrap").hidden = !!store.get();
     $("fCode").value = "";
     $("fName").value = s?.name || "";
@@ -149,7 +149,7 @@
     $("fStart").value = s?.start || "09:00";
     $("fEnd").value = s?.end || "15:00";
     $("fNote").value = s?.note || "";
-    $("del").hidden = !s; $("del").textContent = "Remove shift";
+    $("del").hidden = !s; $("del").textContent = "Remove Shift";
     $("fErr").hidden = true;
     const chips = $("nameChips"); chips.replaceChildren();
     knownNames().forEach((n) => { const c = el("button", null, n); c.type = "button"; c.onclick = () => { $("fName").value = n; }; chips.append(c); });
@@ -197,7 +197,7 @@
 
   $("del").onclick = async () => {
     if (!editing) return;
-    if (!confirmDel) { confirmDel = true; $("del").textContent = "Tap again to remove"; return; }
+    if (!confirmDel) { confirmDel = true; $("del").textContent = "Tap Again to Remove"; return; }
     try { if (await send({ action: "delete", id: editing.id })) { closeForm(); await load(); } }
     catch { showErr("Couldn't remove it. Try again."); }
   };
